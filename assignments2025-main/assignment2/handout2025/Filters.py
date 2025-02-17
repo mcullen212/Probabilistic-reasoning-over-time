@@ -1,40 +1,119 @@
-
 import random
 import numpy as np
 
 from models import *
 
-
-#
-# Add your Filtering / Smoothing approach(es) here
-#
 class HMMFilter:
-    def __init__(self, probs, tm, om, sm):
-        self.__tm = tm
-        self.__om = om
-        self.__sm = sm
-        self.__f = probs
+    def __init__(self, initial_probs, transition_model, observation_model, state_model):
+        self.tm = transition_model  # Transition model (a_ij)
+        self.om = observation_model  # Observation model (b_j(y_t))
+        self.f = initial_probs  # Initial probability distribution (\pi)
+        self.sm = state_model
+
+    def filter(self, sensorR: int) -> np.array:
+        """
+        Forward algorithm for filtering.
+        Args:
+            sensorR: Single sensor reading (index!)
+        Returns:
+            Final filtered probabilities
+        """
+        # Current belief state
+        f = self.f.copy()
         
-    # sensorR is the sensor reading (index!), self._f is the probability distribution resulting from the filtering    
-    def filter(self, sensorR : int) -> np.array :
-        #print( self.__f)
+        # Prediction step: f_{t|t-1} = f_{t-1|t-1} * T
+        f = np.dot(f, self.tm.get_T())
         
-        #...
-        return self.__f
+        # Update step (always do update, even for "nothing" readings)
+        o = self.om.get_o_reading(sensorR)
+        f = f * np.diag(o)
+        
+        # Normalize
+        if np.sum(f) > 0:
+            f = f / np.sum(f)
+        
+        # Update belief state
+        self.f = f
+        
+        return f
 
 
 class HMMSmoother:
-    
-    def __init__(self, tm, om, sm):
-        self.__tm = tm
-        self.__om = om
-        self.__sm = sm
+    def __init__(self, hmm_filter: HMMFilter):
+        self.hmm_filter = hmm_filter
+        self.k = 5  # Sequence length for smoothing
 
-    # sensor_r_seq is the sequence (array) with the t-k sensor readings for smoothing, 
-    # f_k is the filtered result (f_vector) for step k
-    # fb is the smoothed result (fb_vector)
-    def smooth(self, sensor_r_seq : np.array, f_k : np.array) -> np.array:
-        fb = self.__f # setting a dummy value here...
-        # somehow compute fb to be better than f ;-)
-        # ...
-        return fb
+    def smooth(self, sensor_r_seq: np.array, f_k: np.array) -> np.array:
+        """
+        Backward algorithm for smoothing.
+        Args:
+            sensor_r_seq: sequence with the t-k sensor readings for smoothing
+            f_k: filtered result (f_vector) for step k
+        Returns:
+            Smoothed state probabilities (fb_vector)
+        """
+        K = len(self.hmm_filter.f)  # Number of states
+        
+        # Initialize beta with ones for the last time step
+        beta = np.ones(K)
+        
+        # Backward recursion through the sequence
+        for t in range(len(sensor_r_seq)-2, -1, -1):
+            next_sensor = sensor_r_seq[t+1]
+            # Always do update, even for "nothing" readings
+            o = self.hmm_filter.om.get_o_reading(next_sensor)
+            beta = np.dot(self.hmm_filter.tm.get_T().T, np.diag(o) @ beta)
+            
+            # Normalize to prevent underflow
+            beta = beta / np.sum(beta)
+        
+        # Compute smoothed probabilities
+        smoothed = f_k * beta
+        # Normalize
+        smoothed = smoothed / np.sum(smoothed)
+        
+        return smoothed
+
+class HMMForwardBackward:
+    def __init__(self, hmm_filter: HMMFilter, hmm_smoother: HMMSmoother):
+        self.hmm_filter = hmm_filter
+        self.hmm_smooth = hmm_smoother
+        self.sensor_history = []  # Keep track of last 5 sensor readings
+
+    def forward_backward(self, observations: list) -> np.array:
+        """
+        Forward-backward algorithm for smoothing.
+        Args:
+            observations: List of sensor readings y_1:T
+        Returns:
+            Smoothed state probabilities
+        """
+        T = len(observations)
+        N = len(self.hmm_filter.f)
+        
+        # Forward pass
+        alpha = np.zeros((T, N))
+        f = self.hmm_filter.f.copy()
+        
+        for t in range(T):
+            # Prediction and update (always do both)
+            f = np.dot(f, self.hmm_filter.tm.get_T())
+            o = self.hmm_filter.om.get_o_reading(observations[t])
+            f = f * np.diag(o)
+            # Normalize
+            f = f / np.sum(f)
+            alpha[t] = f
+        
+        # Backward pass
+        beta = np.ones((T, N))
+        for t in range(T-2, -1, -1):
+            o = self.hmm_filter.om.get_o_reading(observations[t+1])
+            beta[t] = np.dot(self.hmm_filter.tm.get_T().T, np.diag(o) @ beta[t+1])
+            beta[t] = beta[t] / np.sum(beta[t])
+        
+        # Combine forward and backward passes
+        smoothed = alpha * beta
+        # Normalize
+        smoothed = smoothed / np.sum(smoothed, axis=1, keepdims=True)
+        
+        return smoothed
