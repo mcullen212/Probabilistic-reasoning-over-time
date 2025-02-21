@@ -86,7 +86,7 @@ class Localizer:
         self.__trueState = self.__rs.move_once(self.__tm)
         self.__sense = self.__rs.sense_in_current_state(self.__om)
         self.__probs = self.__HMM.filter( self.__sense)
-        
+
         fPositions = self.__probs.copy()
         
         for state in range(0, self.__sm.get_num_of_states(), 4) :
@@ -114,7 +114,7 @@ class Localizer:
         self.__trueState = trueState
         self.__sense = self.__rs.sense_in_current_state()
         self.__probs = self.__HMM.filter( self.__sense)
-        
+
         fPositions = self.__probs.copy()
         
         for state in range(0, self.__sm.get_num_of_states(), 4) :

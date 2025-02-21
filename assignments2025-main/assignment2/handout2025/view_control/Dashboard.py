@@ -446,7 +446,7 @@ class Dashboard:
         with self.out:
             clear_output(wait=True)
             print(printout)
-            plt.figure(1, figsize=(10, 10))
+            #plt.figure(1, figsize=(10, 10))
             if plotting:
                 display(plt.show())
 
