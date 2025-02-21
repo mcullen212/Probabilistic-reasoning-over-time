@@ -1,0 +1,179 @@
+\documentclass{article}
+\usepackage{amsmath, amssymb, amsfonts}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{placeins}
+
+\geometry{a4paper, margin=1in}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\includegraphics[height=1cm]{lth.png}}
+\fancyhead[C]{Campoli, Cullen de Erquiaga, Ghigliani, Mutz}
+\fancyhead[R]{\today}
+\fancyfoot[C]{\thepage}
+\fancyfoot[L]{Simulation Tools - Project 1}
+\fancyfoot[R]{Exchange Students}
+
+\titleformat{\section}
+  {\Large\bfseries\sffamily}
+  {\thesection.}{0.5em}{}
+\titlespacing*{\section}{0pt}{1.5ex plus 1ex minus .2ex}{1ex plus .2ex}
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{1.5cm}
+    {\LARGE\bfseries Lund University\par}
+    \vspace*{0.5cm}
+    {\LARGE\bfseries Simulation Tools\par}
+    \vspace{1cm}
+    {\Large Project 1\par}
+    \vspace{1cm}
+    {\Large Campoli Lucas\par}
+    \vspace{0.5cm}
+    {\Large Cullen de Erquiaga Magdalena Itziar\par}
+    \vspace{0.5cm}
+    {\Large Ghigliani Franco\par}
+    \vspace{0.5cm}
+    {\Large Mutz Matias\par}
+    \vspace{1cm}
+    {\large Exchange Students\par}
+    \vspace{2cm}
+    \includegraphics[width=0.7\textwidth]{lth.png}
+    \vfill
+    {\large \today\par}
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+\section{Task 1}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\textwidth]{pendulum.png}
+    \caption{Elastic Pendulum}
+    \label{fig:pendulum}
+    \cite{pendulum}
+\end{figure}
+
+Harmonic function when the oscillation of the of the waves of the x-value have the point part tending to straight line
+when the oscillations of the waves of the y-value are stable not harmonic function waves are unstable which makes
+sense as the resort is affecting the plotting the higher the k constant → the more stable the waves making them tend
+to a harmonic function.
+
+\section{Task 2}
+
+In this experiment, we implemented and tested the BDF-3 and BDF-4 methods to solve the elastic pendulum problem
+described by the given system of ODEs. The right-hand side function (rhs\_function) was implemented to compute the
+derivatives of the state variables, and the BDF-3 and BDF-4 methods were implemented using Newton's method (via fsolve)
+as the corrector iteration.
+The simulations were performed for a moderately sized spring constant k=10 and initial conditions corresponding to a
+slightly stretched spring.
+
+\subsection{\textbf{Observations}}
+
+\begin{itemize}
+    \item \textbf{BDF-3 and BDF-4 Performance:}
+    \subitem - Both BDF-3 and BDF-4 methods successfully solved the elastic pendulum problem for the given parameters.
+    The solutions for y1 and y2 (positions) were plotted over time, showing oscillatory behavior consistent with the
+    physical interpretation of the system.
+    BDF-4, being a higher-order method, provided slightly smoother and more accurate results compared to BDF-3,
+    especially for longer simulation times.
+    This is expected since higher-order methods generally have better accuracy
+    and stability properties.
+    \item \textbf{Stability and Accuracy:}
+    \subitem - The BDF methods are implicit and have good stability properties for stiff problems.
+    The elastic pendulum problem becomes increasingly stiff as k increases, and the BDF methods were able to handle this
+    stiffness effectively.
+    The use of Newton's method for the corrector iteration ensured that the implicit equations were solved accurately,
+    even for larger step sizes.
+    \item \textbf{Initial Steps and Lower-Order Methods:}
+    \subitem - For the first few steps, where insufficient previous values were available, lower-order methods (e.g.,
+    explicit Euler) were used.
+    This is a common practice in multi-step methods like BDF to initialize the solution history.
+    \item \textbf{Influence of Step Size:}
+    \subitem - The step size h=0.01 was chosen to balance computational efficiency and accuracy. Smaller step sizes
+    would improve accuracy but increase computational cost, while larger step sizes might lead to instability or loss of
+    accuracy, especially for a higher k.
+    \item \textbf{Comparison with Explicit Methods:}
+    \subitem - Explicit methods like the explicit Euler method would struggle with this problem, especially for large k,
+    due to their poor stability properties for stiff systems. The BDF methods, being implicit, are better suited for such
+    problems.
+    \item \textbf{Reproducibility:}
+    \subitem - The experiments can be reproduced by running the provided code with the specified parameters. The results
+    are consistent and can be verified by comparing the plots generated for BDF-3 and BDF-4.
+\end{itemize}
+
+\subsection{\textbf{Conclusion}}
+
+The BDF-3 and BDF-4 methods are effective for solving the elastic pendulum problem, particularly for moderately stiff
+systems.
+The higher-order BDF-4 method provides better accuracy and stability compared to BDF-3, making it a preferable choice
+for longer simulations or more stringent accuracy requirements.
+The results align with the theoretical expectations from stability diagrams, demonstrating the practical advantages of
+implicit methods for stiff ODEs.
+
+\section{Task 3}
+
+\subsection{\textbf{vanishing pointObserving the Behavior of Fixed Order Methods}}
+
+Fixed-order methods, such as \textbf{Explicit Euler} and \textbf{BDF-2}, are tested against increasing values of k. The key observations include:
+
+\begin{itemize}
+    \item \textbf{Explicit Euler Method:}
+    \subitem - For \textbf{small} values of k (e.g., k=1), the method provides a reasonable approximation.
+    \subitem - As k \textbf{increases}, the high-frequency oscillations become more pronounced, and the explicit Euler method struggles to maintain stability.
+    \subitem - For \textbf{large k}, the method produces numerical instability, leading to rapidly diverging or oscillatory results, which is a well-known issue with explicit methods for stiff problems.
+    \item \textbf{BDF-2 (Implicit Method from Task 2 Example):}
+    \subitem - Unlike explicit Euler, implicit methods like BDF-2 can handle stiff problems better.
+    \subitem - The method remains stable for large k, though some numerical damping may be observed.
+    \subitem - For moderate k, BDF-2 maintains a smooth and stable solution.
+\end{itemize}
+
+\subsection{\textbf{Comparison with Explicit Euler and Fixed-Point Iteration}}
+
+\begin{itemize}
+    \item \textbf{Explicit Euler} becomes impractical for \textbf{large k} due to stability constraints (i.e., it requires a very small time step to remain accurate).
+    \item \textbf{Fixed-point iteration methods} (like the one used in BDF-2) handle large k much better but may require more computational effort.
+    \item A key takeaway is that explicit Euler is \textbf{not suitable} for high-frequency oscillations, whereas implicit methods can manage them efficiently.
+\end{itemize}
+
+\subsection{\textbf{Stability Verification Using Stability Diagrams}}
+
+The observed instability in explicit Euler aligns with stability region analysis:
+
+\begin{itemize}
+    \item \textbf{Explicit Euler has a very limited stability region}, meaning that for stiff problems (like when k is large), the numerical method exhibits instability unless the step size is extremely small.
+    \item \textbf{BDF methods (implicit methods) have a much larger stability region}, allowing them to work with larger time steps while still producing accurate results.
+    \item \textbf{For very large k}, even BDF-2 starts struggling, and higher-order BDF methods (e.g., BDF-4 or BDF-3) become preferable.
+\end{itemize}
+
+\subsection{\textbf{Final Takeaways}}
+
+\begin{itemize}
+    \item \textbf{Explicit Euler is not suited for large k} because of instability issues.
+    \item \textbf{Fixed-point iteration methods (like BDF-2) handle stiffness well} but require more computational effort.
+    \item \textbf{The stability diagrams align with our numerical results}, confirming that implicit methods are necessary for large k.
+    \item \textbf{For very high k, we may need higher-order implicit methods like BDF-4 or adaptive solvers like CVODE.}
+\end{itemize}
+
+\section{Task 4}
+
+\newpage
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
