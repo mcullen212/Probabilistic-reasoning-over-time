@@ -83,6 +83,7 @@ class HMMForwardBackward:
     def forward_backward(self, observations: list) -> np.array:
         """
         Forward-backward algorithm for smoothing.
+        Minimum number of observations is 5.
         Args:
             observations: List of sensor readings y_1:T
         Returns:
