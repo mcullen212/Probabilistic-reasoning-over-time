@@ -23,7 +23,7 @@ class HMMFilter:
         
         # Prediction step: f_{t|t-1} = f_{t-1|t-1} * T
         f = np.dot(f, self.tm.get_T())
-        
+
         # Update step (always do update, even for "nothing" readings)
         o = self.om.get_o_reading(sensorR)
         f = f * np.diag(o)
@@ -90,7 +90,7 @@ class HMMForwardBackward:
             Smoothed state probabilities
         """
         T = len(observations)
-        N = len(self.hmm_filter.f)
+        N = self.hmm_filter.tm.get_num_of_states()
         
         # Forward pass
         alpha = np.zeros((T, N))
@@ -109,7 +109,7 @@ class HMMForwardBackward:
         beta = np.ones((T, N))
         for t in range(T-2, -1, -1):
             o = self.hmm_filter.om.get_o_reading(observations[t+1])
-            beta[t] = np.dot(self.hmm_filter.tm.get_T().T, np.diag(o) @ beta[t+1])
+            beta[t] = np.dot(np.dot(self.hmm_filter.tm.get_T(), o), beta[t+1])
             beta[t] = beta[t] / np.sum(beta[t])
         
         # Combine forward and backward passes
