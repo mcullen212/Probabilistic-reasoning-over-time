@@ -61,13 +61,20 @@ class HMMSmoother:
         for t in range(len(sensor_r_seq)-2, -1, -1):
             next_sensor = sensor_r_seq[t+1]
             # Always do update, even for "nothing" readings
+            # Get observation probabilities for the next sensor reading
             o = self.hmm_filter.om.get_o_reading(next_sensor)
+            # Update beta
+            # beta_t = T ^ T * (o_{t+1} * beta_{t+1})
             beta = np.dot(self.hmm_filter.tm.get_T().T, np.diag(o) @ beta)
-        
+
         # Compute smoothed probabilities
         smoothed = f_k * beta
+
+        if (np.sum(smoothed) > 0):
+            smoothed /= np.sum(smoothed)
+
         # Normalize
-        smoothed = smoothed / np.sum(smoothed)
+        smoothed /= np.sum(smoothed)
         
         return smoothed
 
@@ -99,7 +106,8 @@ class HMMForwardBackward:
             o = self.hmm_filter.om.get_o_reading(observations[t])
             f = f * np.diag(o)
             # Normalize
-            f = f / np.sum(f)
+            if np.sum(f) > 0:
+                f = f / np.sum(f)
             alpha[t] = f
         
         # Backward pass
@@ -107,7 +115,9 @@ class HMMForwardBackward:
         for t in range(T-2, -1, -1):
             o = self.hmm_filter.om.get_o_reading(observations[t+1])
             beta[t] = np.dot(np.dot(self.hmm_filter.tm.get_T(), o), beta[t+1])
-            beta[t] = beta[t] / np.sum(beta[t])
+
+            if np.sum(beta[t]) > 0:
+                beta[t] = beta[t] / np.sum(beta[t])
         
         # Combine forward and backward passes
         smoothed = alpha * beta
