@@ -63,9 +63,6 @@ class HMMSmoother:
             # Always do update, even for "nothing" readings
             o = self.hmm_filter.om.get_o_reading(next_sensor)
             beta = np.dot(self.hmm_filter.tm.get_T().T, np.diag(o) @ beta)
-            
-            # Normalize to prevent underflow
-            beta = beta / np.sum(beta)
         
         # Compute smoothed probabilities
         smoothed = f_k * beta
