@@ -114,14 +114,16 @@ class HMMForwardBackward:
         beta = np.ones((T, N))
         for t in range(T-2, -1, -1):
             o = self.hmm_filter.om.get_o_reading(observations[t+1])
-            beta[t] = np.dot(np.dot(self.hmm_filter.tm.get_T(), o), beta[t+1])
+            beta[t] = np.dot(np.dot(o, self.hmm_filter.tm.get_T().T), beta[t+1])
 
             if np.sum(beta[t]) > 0:
                 beta[t] = beta[t] / np.sum(beta[t])
         
         # Combine forward and backward passes
         smoothed = alpha * beta
-        # Normalize
-        smoothed = smoothed / np.sum(smoothed, axis=1, keepdims=True)
+        # Normalize safely
+        row_sums = np.sum(smoothed, axis=1)
+        valid_rows = row_sums > 0
+        smoothed[valid_rows] = smoothed[valid_rows] / row_sums[valid_rows, np.newaxis]
         
         return smoothed
