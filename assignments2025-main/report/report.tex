@@ -12,16 +12,17 @@
 \usepackage{hyperref}
 \usepackage{cleveref}
 \usepackage{placeins}
+\usepackage{mdframed}
 
 \geometry{a4paper, margin=1in}
 
 \pagestyle{fancy}
 \fancyhf{}
 \fancyhead[L]{\includegraphics[height=1cm]{lth.png}}
-\fancyhead[C]{Campoli, Cullen de Erquiaga, Ghigliani, Mutz}
-\fancyhead[R]{\today}
+\fancyhead[C]{AI - Probabilistic reasoning over time}
+\fancyhead[R]{G14: Cullen \& Mutz}
+\fancyfoot[L]{\today}
 \fancyfoot[C]{\thepage}
-\fancyfoot[L]{Simulation Tools - Project 1}
 \fancyfoot[R]{Exchange Students}
 
 \titleformat{\section}
@@ -34,19 +35,15 @@
 \begin{titlepage}
     \centering
     \vspace*{1.5cm}
-    {\LARGE\bfseries Lund University\par}
+    {\LARGE\bfseries Artificial Intelligence\par}
     \vspace*{0.5cm}
-    {\LARGE\bfseries Simulation Tools\par}
+    {\LARGE\bfseries Assignment 2\par}
+    \vspace*{0.5cm}
+    {\LARGE\bfseries Probabilistic reasoning over time\par}
     \vspace{1cm}
-    {\Large Project 1\par}
-    \vspace{1cm}
-    {\Large Campoli Lucas\par}
+    {\Large Cullen de Erquiaga, Magdalena Itziar\par}
     \vspace{0.5cm}
-    {\Large Cullen de Erquiaga Magdalena Itziar\par}
-    \vspace{0.5cm}
-    {\Large Ghigliani Franco\par}
-    \vspace{0.5cm}
-    {\Large Mutz Matias\par}
+    {\Large Mutz, Matias\par}
     \vspace{1cm}
     {\large Exchange Students\par}
     \vspace{2cm}
@@ -58,122 +55,152 @@
 \tableofcontents
 \newpage
 
-\section{Task 1}
+\section*{Statement}
+\addcontentsline{toc}{section}{Statement}
+\indent
 
-\begin{figure}[h!]
+We collaborate with Group 2 (Franco Ghigliani \& Lucas Campoli). They helped us a lot by improving our implementation. Our implementations were similar but the main difference we noticed was that theirs was shorter, while being just as effective as ours. Another difference was our forward-backward algorithm in filters.py file, while they have implemented it on another file. Both approaches are correct, but we believe our approach is better for future maintainability, code reuse and improvements.
+
+Lucas and Franco helped us when comparing results, they identified that our method for plotting results was incorrect. We were not calculating the average error comparisons. Furthermore, they also pointed out we were comparing the different models.  We were using two different localizers to compare the filters, when we should have been using the same true trajectory. We corrected both of these errors, and now our model comparisons are accurate.
+
+\section*{Summary of the task}
+\addcontentsline{toc}{section}{Summary of the task}
+\indent
+
+For this assignment, we implemented and evaluated different filtering methods using the Hidden Markov Model(HMM) localisation approach to estimate the robot position in a grid environment. The robot can move in four different directions, and a sensor provides the approximate location of the robot.
+
+The main challenge is that the sensor is not always reliable; it sometimes gives incorrect readings, or no readings at all. This is where the HMM-based localization plays a role in the approximation of the localisation of the robot. Using the different filtering approaches from the HMM-model to estimate where the robot was. 
+The first is a forward filtering, which uses the current sensor reading and the robot´s movement model to estimate its position. We implemented a more complex algorithm, forward-backward smoothing, which uses a sequence of five past (forward) and future (backward) observations to improve predictions.
+
+An interesting aspect of this assignment was testing these methods under different conditions. We used two types of sensor observation models: the Uniform Failure (UF), where the sensor reading probabilities are equally distributed in all positions (0.1) in the grid, and the Non-Uniform Failures (NUF), where sensor reading probabilities depend on the robots specific location. 
+
+The results showed how each filtering method performed differently depending on the grid size and the observation model used. We measured their performance using the Manhattan distance between true and estimated location, and tracked the frequency of hitting the robot's location, as well as, tracking the no sensor readings. 
+
+
+\section*{Explanation}
+\addcontentsline{toc}{section}{Explanation}
+\indent
+
+There are three models: State, Transition, and Observation. 
+
+The State model describes the dimensions of the grid and the methods for transforming a pose or position of the robot into a certain state while collecting the sensor readings at that time. 
+
+The Transition model contains the transition matrix containing the probabilities of transitioning from one hidden state to another. 
+
+The Observation model defines probabilities of receiving sensor reading in a given hidden state. There are two types of sensors, each handling failure to read a location differently: the Uniform Failure(UF) probability and the Non-Uniform Failure(NUF) probability. 
+
+The NonUniform Failure model works like this: if the robot is near a wall, it will have fewer cells to detect around it, which affects the probability of getting a ``\textit{nothing}'' reading.
+
+\begin{table}[H]
     \centering
-    \includegraphics[width=0.5\textwidth]{pendulum.png}
-    \caption{Elastic Pendulum}
-    \label{fig:pendulum}
-    \cite{pendulum}
+    \renewcommand{\arraystretch}{1.5}
+    \begin{tabular}{|p{7.5cm}|p{7.5cm}|}
+        \hline
+        \textbf{Case 1 - Corner Position:} & \textbf{Case 2 - Center Position:} \\ \hline
+        \begin{minipage}{\linewidth}
+            \centering
+            \vspace{0.3cm}
+            Ls1 (adjacent cells) = 3 pos. (marked with 1) \\
+            Ls2 (secondary cells) = 5 pos. (marked with 2) \\
+            \vspace{0.4cm}
+            \ttfamily
+            2 2 2 \# \# \\
+            2 1 1 \# \# \\
+            2 1 X \# \# \\
+            \# \# \# \# \# \\
+            \# \# \# \# \# \\
+            \vspace{0.3cm}
+        \end{minipage} &
+        \begin{minipage}{\linewidth}
+            \centering
+            \vspace{0.3cm}
+            Ls1 (adjacent cells) = 8 pos. (marked with 1) \\
+            Ls2 (secondary cells) = 16 pos. (marked with 2) \\
+            \vspace{0.4cm}
+            \ttfamily
+            2 2 2 2 2 \\
+            2 1 1 1 2 \\
+            2 1 X 1 2 \\
+            2 1 1 1 2 \\
+            2 2 2 2 2 \\
+            \vspace{0.3cm}
+        \end{minipage} \\ 
+        \hline
+    \end{tabular}
+    \caption{Comparison of sensor readings in corner and center positions}
+    \label{tab:sensor_positions}
+\end{table}
+
+If the robot is in the corner, it only has 3 adjacent cells and 5 secondary cells, so the probability of reading ``\textit{nothing}'' is:
+
+\begin{align*}
+    P(\text{nothing}) &= 1.0 - 0.1 \quad \text{(correct reading)} \\
+    &\quad - (3 \times 0.05) \quad \text{(adjacent cells)} \\
+    &\quad - (5 \times 0.025) \quad \text{(secondary cells)} \\
+    &= 0.7375 \quad \text{or } 73.75\%.
+\end{align*}
+
+If the robot is in a center position, it has 8 adjacent cells and 16 secondary cells, so the probability of reading ``\textit{nothing}'' is:
+
+\begin{align*}
+    P(\text{nothing}) &= 1.0 - 0.1 \quad \text{(correct reading)} \\
+    &\quad - (8 \times 0.05) \quad \text{(adjacent cells)} \\
+    &\quad - (16 \times 0.025) \quad \text{(secondary cells)} \\
+    &= 0.1 \quad \text{or } 10\%.
+\end{align*}
+
+On the other hand, the Uniform Failure model treats all failures in the same way, having a constant 0.1 probability of failing to read. So if the sensor fails, we do not have any additional information about the robot's location.
+
+The difference between failure probability affect greatly the filtering algorithm
+In the NUF sensor, a "nothing" reading provides valuable information by suggesting the robot is likely to be near a wall or corner where there are fewer cells around it, rather than in open spaces where there are more cells around.
+
+In contrast, the UF sensor’s constant 10\% of failure probability means that ``\textit{nothing}'' readings provide no information at all about where the robot is. This forces the filter to only rely on the sensor readings for localization. If there are sequences of ``\textit{nothing}'' readings, it is very unlikely that the position of the robot can be guessed. This is why the NUF model is generally more accurate than the UF model, because it gives more information when failing to sense.
+
+\section*{Discussion}
+\addcontentsline{toc}{section}{Discussion}
+
+\subsection*{How accurately can you track the robot with filtering (or smoothing), is it even worth doing that?}
+\indent
+
+As time passes the probability of not detecting the robot's position decreases. The filtering accuracy improves over time, meaning the estimate gets closer to the true position the longer the process runs. The accuracy of the filtering and smoothing also depends on the grid size and the failure probability taken (uniform or non-uniform). However, sensor failures, when no readings are obtained, the performance is impacted. In cases of frequent failure the worse the model is in accurately finding the position.
+
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.8\textwidth}
+        \begin{mdframed}[linewidth=2pt, roundcorner=10pt, backgroundcolor=white]
+            \centering
+            \includegraphics[width=\textwidth]{graphs.png}
+        \end{mdframed}
+        \caption{Comparison of filtering methods under uniform and non-uniform failure models across different grid sizes.}
+        \label{fig:filter_comparation}
+    \end{minipage}
 \end{figure}
 
-Harmonic function when the oscillation of the of the waves of the x-value have the point part tending to straight line
-when the oscillations of the waves of the y-value are stable not harmonic function waves are unstable which makes
-sense as the resort is affecting the plotting the higher the k constant → the more stable the waves making them tend
-to a harmonic function.
+As seen in the figure \ref{fig:filter_comparation}, in smaller grids, the difference between the effect of the uniform failure (UF) and non-uniform failure (NUF) is more noticeable, observable in the 4x4 graph where the NUF hits 28.2\% whereas the UF hits 25.6\%. The NUF model performs better as it provides more details over where the robot is on the grid. However, in larger grids, the difference between failure models is less significant since there are more locations for the robot, making the additional details from NUF less impactful, seen in the 16x20 graph where in fact the UF hit 46.4\% and the NUF hit 40\%. Thus, the smaller the grid the more detailed the failure model the better the chance of hitting the location.
 
-\section{Task 2}
+In addition, as time passes, tracking improves as the filtering process accumulates observations. However, in the 10x10 grid graph, the comparison uses the forward-backward model, which estimates based on past and future observations. In the graph, we can see that the forward-backward smoothing has a lower rate and will continue to behave this way over time, providing less fluctuation, more stability, and more accurate results. In addition, the performance was affected by the sensor failures, which were high (53 readings), impacting the overall performance.
+In conclusion, filtering is beneficial since it improves localisation over time. The effectiveness of the different models depends on grid size and failure probabilities. As expected, the non-uniform failure model generally performs better as it provides more detailed probability distributions, especially in the smaller grids. 
 
-In this experiment, we implemented and tested the BDF-3 and BDF-4 methods to solve the elastic pendulum problem
-described by the given system of ODEs. The right-hand side function (rhs\_function) was implemented to compute the
-derivatives of the state variables, and the BDF-3 and BDF-4 methods were implemented using Newton's method (via fsolve)
-as the corrector iteration.
-The simulations were performed for a moderately sized spring constant k=10 and initial conditions corresponding to a
-slightly stretched spring.
 
-\subsection{\textbf{Observations}}
+\subsection*{Is the HMM approach as implemented suitable for solving the problem of robot localisation?}
+\indent
 
-\begin{itemize}
-    \item \textbf{BDF-3 and BDF-4 Performance:}
-    \subitem - Both BDF-3 and BDF-4 methods successfully solved the elastic pendulum problem for the given parameters.
-    The solutions for y1 and y2 (positions) were plotted over time, showing oscillatory behavior consistent with the
-    physical interpretation of the system.
-    BDF-4, being a higher-order method, provided slightly smoother and more accurate results compared to BDF-3,
-    especially for longer simulation times.
-    This is expected since higher-order methods generally have better accuracy
-    and stability properties.
-    \item \textbf{Stability and Accuracy:}
-    \subitem - The BDF methods are implicit and have good stability properties for stiff problems.
-    The elastic pendulum problem becomes increasingly stiff as k increases, and the BDF methods were able to handle this
-    stiffness effectively.
-    The use of Newton's method for the corrector iteration ensured that the implicit equations were solved accurately,
-    even for larger step sizes.
-    \item \textbf{Initial Steps and Lower-Order Methods:}
-    \subitem - For the first few steps, where insufficient previous values were available, lower-order methods (e.g.,
-    explicit Euler) were used.
-    This is a common practice in multi-step methods like BDF to initialize the solution history.
-    \item \textbf{Influence of Step Size:}
-    \subitem - The step size h=0.01 was chosen to balance computational efficiency and accuracy. Smaller step sizes
-    would improve accuracy but increase computational cost, while larger step sizes might lead to instability or loss of
-    accuracy, especially for a higher k.
-    \item \textbf{Comparison with Explicit Methods:}
-    \subitem - Explicit methods like the explicit Euler method would struggle with this problem, especially for large k,
-    due to their poor stability properties for stiff systems. The BDF methods, being implicit, are better suited for such
-    problems.
-    \item \textbf{Reproducibility:}
-    \subitem - The experiments can be reproduced by running the provided code with the specified parameters. The results
-    are consistent and can be verified by comparing the plots generated for BDF-3 and BDF-4.
-\end{itemize}
+The Hidden Markov Model (HMM) approach is suitable for solving theoretical localisation, but in the practical applications there are more factors that must be considered. The accuracy of the HMM-based model depends on the grid size, sensor reliability, the precision of the transition and observation models.
 
-\subsection{\textbf{Conclusion}}
+Regarding filtering and smoothing, both approaches improve localization over time. However, smoothing improves greatly in the number of observations, making it computational complex and expensive. The failure models used also affect the outcomes. In smaller grids, there is a noticeable difference between the uniform failure(UF) and non-uniform failure(NUF), with the non-uniform representing the sensor behaviour more accurately. This makes the filtering and smoothing dependent on the failure model. While using larger grids the advantage of the NUF decreases since the number of possible positions increases, therefore, the smoothing and filtering become less sensitive to the failure model used.
 
-The BDF-3 and BDF-4 methods are effective for solving the elastic pendulum problem, particularly for moderately stiff
-systems.
-The higher-order BDF-4 method provides better accuracy and stability compared to BDF-3, making it a preferable choice
-for longer simulations or more stringent accuracy requirements.
-The results align with the theoretical expectations from stability diagrams, demonstrating the practical advantages of
-implicit methods for stiff ODEs.
+Even though the filtering and smoothing improves over time, this makes their computational cost scale with the grid size, making it impractical for large environments. In conclusion, the HMM approach is effective for small to medium sized grids but for larger environments it's better to consider an alternative approach. 
 
-\section{Task 3}
+One alternative is the Monte Carlo Localisation (MCL), seen in the paper “Monte Carlo Localization: Efficient Position Estimation for Mobile Robots" by Fox et al. presents Monte Carlo Localization (MCL). MCL uses particle filters, which are “fast sampling techniques to represent the robot’s belief.”(Fox et al., 1999). The key advantages, when compared to the grid-based markov localization, include more efficient use of memory, simpler implementation, and the ability to represent multi-modal distributions, making it capable of globally localizing a robot. The MCL approach uses adaptive sampling making the model have to analyze less data while maintaining effectiveness. This adaptability leads the robot to incorporate at a higher frequency the sensor data thus making the localisation more suitable for large environments compared to the HMM approach. 
 
-\subsection{\textbf{vanishing pointObserving the Behavior of Fixed Order Methods}}
+On the other hand, the markov localization algorithm is computed over the “probability distribution over all possible positions in the environment”(Fox et al., 1999) hence the algorithm is better suited for smaller grids because the computability becomes too complex in large environments and inefficient.
+Furthermore, the paper explains the update method: “are only applicable if the environment is Markovian, that is, if past sensor readings are conditionally independent of future readings given the true position of the robot.”(Fox et al., 1999) This assumption limits the model's effectiveness in non-markovian environments.
 
-Fixed-order methods, such as \textbf{Explicit Euler} and \textbf{BDF-2}, are tested against increasing values of k. The key observations include:
+To conclude, the HMM approach is good for theoretical robot localisation in small and medium grid environments but it's impractical for large spaces. While the MCL is better for scalability and efficiency. Therefore, for real-world applications MCL is the better choice.
 
-\begin{itemize}
-    \item \textbf{Explicit Euler Method:}
-    \subitem - For \textbf{small} values of k (e.g., k=1), the method provides a reasonable approximation.
-    \subitem - As k \textbf{increases}, the high-frequency oscillations become more pronounced, and the explicit Euler method struggles to maintain stability.
-    \subitem - For \textbf{large k}, the method produces numerical instability, leading to rapidly diverging or oscillatory results, which is a well-known issue with explicit methods for stiff problems.
-    \item \textbf{BDF-2 (Implicit Method from Task 2 Example):}
-    \subitem - Unlike explicit Euler, implicit methods like BDF-2 can handle stiff problems better.
-    \subitem - The method remains stable for large k, though some numerical damping may be observed.
-    \subitem - For moderate k, BDF-2 maintains a smooth and stable solution.
-\end{itemize}
+\section*{References}
+\addcontentsline{toc}{section}{References}
 
-\subsection{\textbf{Comparison with Explicit Euler and Fixed-Point Iteration}}
-
-\begin{itemize}
-    \item \textbf{Explicit Euler} becomes impractical for \textbf{large k} due to stability constraints (i.e., it requires a very small time step to remain accurate).
-    \item \textbf{Fixed-point iteration methods} (like the one used in BDF-2) handle large k much better but may require more computational effort.
-    \item A key takeaway is that explicit Euler is \textbf{not suitable} for high-frequency oscillations, whereas implicit methods can manage them efficiently.
-\end{itemize}
-
-\subsection{\textbf{Stability Verification Using Stability Diagrams}}
-
-The observed instability in explicit Euler aligns with stability region analysis:
-
-\begin{itemize}
-    \item \textbf{Explicit Euler has a very limited stability region}, meaning that for stiff problems (like when k is large), the numerical method exhibits instability unless the step size is extremely small.
-    \item \textbf{BDF methods (implicit methods) have a much larger stability region}, allowing them to work with larger time steps while still producing accurate results.
-    \item \textbf{For very large k}, even BDF-2 starts struggling, and higher-order BDF methods (e.g., BDF-4 or BDF-3) become preferable.
-\end{itemize}
-
-\subsection{\textbf{Final Takeaways}}
-
-\begin{itemize}
-    \item \textbf{Explicit Euler is not suited for large k} because of instability issues.
-    \item \textbf{Fixed-point iteration methods (like BDF-2) handle stiffness well} but require more computational effort.
-    \item \textbf{The stability diagrams align with our numerical results}, confirming that implicit methods are necessary for large k.
-    \item \textbf{For very high k, we may need higher-order implicit methods like BDF-4 or adaptive solvers like CVODE.}
-\end{itemize}
-
-\section{Task 4}
-
-\newpage
-
-\bibliographystyle{IEEEtran}
-\bibliography{references}
+Fox, D., Burgard, W., \& Thrun, S. (1999). Monte Carlo Localization: Efficient Position Estimation for Mobile Robots. In \textit{Proceedings of the 16th AAAI Conference on Artificial Intelligence (AAAI-99)}.
 
 \end{document}
